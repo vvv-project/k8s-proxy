@@ -50,7 +50,7 @@ function watchK8s() {
 io.on('connect', function (socket) {
     console.log('A client connected');
 
-    k8sApi.listNamespacedPod('default')
+    k8sApi.listNamespacedPod({namespace : 'default', labelSelector: 'deletable=yes'})
         .then((res) => {
             console.log(res.body);
             socket.emit('getPods', res.body);
