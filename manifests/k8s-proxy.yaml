@@ -47,7 +47,7 @@ spec:
       serviceAccountName: sa-k8s-proxy
       containers:
       - name: k8s-proxy
-        image: 172.100.100.134/vvv/k8s-proxy:TAG
+        image: 172.100.100.134:80/vvv/k8s-proxy:TAG
         ports:
         - containerPort: 3000
         env:
