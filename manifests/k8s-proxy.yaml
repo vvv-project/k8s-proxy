@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: proxy-sa
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: proxy-sa-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+- kind: ServiceAccount
+  name: proxy-sa
+  namespace: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-k8s-proxy
+spec:
+  type: ClusterIP
+  selector:
+    app: app-k8s-proxy
+  ports:
+    - port: 3000
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep-k8s-proxy
+spec:
+  selector:
+    matchLabels:
+      app: app-k8s-proxy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: app-k8s-proxy
+    spec:
+      serviceAccountName: proxy-sa
+      containers:
+      - name: k8s-proxy
+        image: 172.100.100.134/vvv/k8s-proxy:latest
+        ports:
+        - containerPort: 3000
