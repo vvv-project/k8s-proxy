@@ -21,18 +21,27 @@ const w = new k8s.Watch(conf);
 function watchK8s() {
     w.watch(
         endpoint,
-        {},
+        { 'labelSelector': 'deletable=yes' },
         (type, obj) => {
             console.log(`Event: ${type}`)
             switch (type) {
                 case 'ADDED':
                     io.emit('addedPod', obj.metadata.name)
+                    if(obj.kind === 'Pod' && obj.apiVersion === 'v1'){
+                        io.emit('addedV1Pod', obj)
+                    }
                     break
                 case 'MODIFIED':
                     io.emit('modifiedPod', obj.metadata.name)
+                    if(obj.kind === 'Pod' && obj.apiVersion === 'v1'){
+                        io.emit('modifiedV1Pod', obj)
+                    }                    
                     break
                 case 'DELETED':
                     io.emit('deletedPod', obj.metadata.name)
+                    if(obj.kind === 'Pod' && obj.apiVersion === 'v1'){
+                        io.emit('deletedV1Pod', obj)
+                    }
                     break
             }
         },
@@ -54,6 +63,16 @@ io.on('connect', function (socket) {
         .then((res) => {
             console.log(res.body);
             socket.emit('getPods', res.body);
+        });
+});
+
+io.on('getPodsRequest', function (socket) {
+    console.log('A client requested getPods');
+
+    k8sApi.listNamespacedPod('default', null, null, null, null, 'deletable=yes')
+        .then((res) => {
+            console.log(res.body);
+            socket.emit('getPodsResponse', res.body);
         });
 });
 
