@@ -81,9 +81,8 @@ io.on('connect', function (socket) {
             for (let i = 0; i < podList.length; i++) {
                 console.log(`Removing Pod: ${podList[i]}`);
                 k8sApi.deleteNamespacedPod(podList[i], 'default')
-                    .then((res) => {
-                        console.log(res.body);
-                    });
+                    .then(res => console.log(res.body))
+                    .catch(error => console.log(error));
             }
         } else {
             console.log('removePods: Invalid value');
