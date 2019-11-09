@@ -27,19 +27,19 @@ function watchK8s() {
             switch (type) {
                 case 'ADDED':
                     io.emit('addedPod', obj.metadata.name)
-                    if(obj.kind === 'Pod' && obj.apiVersion === 'v1'){
+                    if (obj.kind === 'Pod' && obj.apiVersion === 'v1') {
                         io.emit('addedV1Pod', obj)
                     }
                     break
                 case 'MODIFIED':
                     io.emit('modifiedPod', obj.metadata.name)
-                    if(obj.kind === 'Pod' && obj.apiVersion === 'v1'){
+                    if (obj.kind === 'Pod' && obj.apiVersion === 'v1') {
                         io.emit('modifiedV1Pod', obj)
-                    }                    
+                    }
                     break
                 case 'DELETED':
                     io.emit('deletedPod', obj.metadata.name)
-                    if(obj.kind === 'Pod' && obj.apiVersion === 'v1'){
+                    if (obj.kind === 'Pod' && obj.apiVersion === 'v1') {
                         io.emit('deletedV1Pod', obj)
                     }
                     break
@@ -64,34 +64,33 @@ io.on('connect', function (socket) {
             console.log(res.body);
             socket.emit('getPods', res.body);
         });
-});
 
-io.on('getPodsRequest', function (socket) {
-    console.log('A client requested getPods');
+    socket.on('getPodsRequest', () => {
+        console.log('getPodsRequest is called.');
 
-    k8sApi.listNamespacedPod('default', null, null, null, null, 'deletable=yes')
-        .then((res) => {
-            console.log(res.body);
-            socket.emit('getPodsResponse', res.body);
-        });
-});
-
-io.on('disconnect', function () {
-    console.log('A client disconnected');
-});
-
-io.on('removePods', function(podList) {
-    if (Array.isArray(podList)) {
-        for (let i = 0; i < podList.length; i++) {
-            console.log(`Removing Pod: ${podList[i]}`);
-            k8sApi.deleteNamespacedPod(podList[i], 'default')
+        k8sApi.listNamespacedPod('default', null, null, null, null, 'deletable=yes')
             .then((res) => {
-                console.log(res.body);
+                console.log('getPodsResponse', res.body);
+                socket.emit('getPodsResponse', res.body);
             });
+    });
+
+    socket.on('removePods', (podList) => {
+        console.log('removePods is called with podList:', podList);
+        if (Array.isArray(podList)) {
+            for (let i = 0; i < podList.length; i++) {
+                console.log(`Removing Pod: ${podList[i]}`);
+                k8sApi.deleteNamespacedPod(podList[i], 'default')
+                    .then((res) => {
+                        console.log(res.body);
+                    });
+            }
+        } else {
+            console.log('removePods: Invalid value');
         }
-    } else {
-        console.log('removePods: Invalid value');
-    }
+    });
+
+    socket.on('disconnect', () => console.log('A client disconnected'));
 });
 
 watchK8s()
